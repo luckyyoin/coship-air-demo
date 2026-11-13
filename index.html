@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COSHIP 항공 합포장 시스템 1차 데모</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#eb1b23;--ink:#1d1d1f;--mute:#6b6b70;--line:#e3e3e6;--bg:#f6f6f7;--ok:#0f8a4f;--okbg:#e7f6ee;--err:#c4161c;--errbg:#fdeaea;--warn:#a15c00;--warnbg:#fff4e0;--blue:#1f5fbf}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans KR",system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.5}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;flex-wrap:wrap}
+.logo{font-weight:700;font-size:16px}.logo b{color:var(--red)}
+.demo{font-size:12px;background:var(--warnbg);color:var(--warn);padding:2px 8px;border-radius:99px}
+.clock{margin-left:auto;font-size:12px;color:var(--mute);display:flex;gap:8px;align-items:center}
+nav{display:flex;gap:4px;overflow-x:auto;padding:0 12px 8px}
+nav .grp{display:flex;gap:2px;align-items:center;padding-right:10px;margin-right:6px;border-right:1px solid var(--line)}
+nav .grp:last-child{border-right:0}
+nav .gl{font-size:11px;color:var(--mute);margin-right:4px;white-space:nowrap}
+nav button{border:0;background:none;padding:6px 10px;border-radius:8px;cursor:pointer;font:inherit;white-space:nowrap;color:var(--ink)}
+nav button.on{background:var(--ink);color:#fff}
+nav .badge{background:var(--red);color:#fff;border-radius:99px;font-size:11px;padding:0 6px;margin-left:4px}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h2{font-size:18px;margin:4px 0 4px}h3{font-size:15px;margin:18px 0 8px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:13px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+label{display:block;font-size:12px;color:var(--mute);margin:8px 0 4px}
+input,select{font:inherit;padding:8px 10px;border:1px solid #cfcfd4;border-radius:8px;width:100%;background:#fff}
+input:focus,select:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.btn{border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:500;cursor:pointer;background:var(--ink);color:#fff;flex:0 0 auto}
+.btn.red{background:var(--red)}.btn.ghost{background:#fff;color:var(--ink);border:1px solid #cfcfd4}.btn.sm{padding:5px 10px;font-size:12px}
+.btn:disabled{background:#c9c9ce;cursor:not-allowed;color:#fff;border-color:#c9c9ce}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mute);font-weight:500;border-bottom:1px solid var(--line);padding:6px 8px;white-space:nowrap}
+td{border-bottom:1px solid #f0f0f2;padding:7px 8px;vertical-align:middle}
+.tbl{overflow-x:auto}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:#eee;white-space:nowrap}
+.p-ok{background:var(--okbg);color:var(--ok)}.p-err{background:var(--errbg);color:var(--err)}.p-warn{background:var(--warnbg);color:var(--warn)}.p-blue{background:#e8f0fc;color:var(--blue)}
+.msg{border-radius:10px;padding:12px 14px;margin:12px 0;font-weight:500}
+.msg.ok{background:var(--okbg);color:var(--ok);border:1px solid #bfe6cf}
+.msg.err{background:var(--errbg);color:var(--err);border:2px solid var(--err);font-size:15px}
+.msg.warn{background:var(--warnbg);color:var(--warn);border:1px solid #f1d29a}
+.scan{display:flex;gap:8px}.scan input{font-size:18px;padding:12px;font-family:ui-monospace,Menlo,monospace}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px dashed #b9b9bf;background:#fff;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;font-family:ui-monospace,Menlo,monospace}
+.chip.bad{border-color:var(--err);color:var(--err)}
+.hint{font-size:12px;color:var(--mute)}
+.label{border:2px solid var(--ink);border-radius:8px;padding:12px;max-width:340px;background:#fff}
+.label .big{font-size:22px;font-weight:700;letter-spacing:1px}
+.bc{width:100%;height:46px;display:block;margin:6px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi .n{font-size:24px;font-weight:700}.kpi .t{font-size:12px;color:var(--mute)}
+.kpi.alert{border-color:var(--red)}.kpi.alert .n{color:var(--red)}
+.steps{display:flex;gap:0;margin:10px 0 4px;overflow-x:auto}
+.step{flex:1;min-width:72px;text-align:center;font-size:12px;color:var(--mute);position:relative;padding-top:18px}
+.step:before{content:"";position:absolute;top:6px;left:0;right:0;height:3px;background:var(--line)}
+.step:after{content:"";position:absolute;top:1px;left:50%;margin-left:-6px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--line)}
+.step.done{color:var(--ink)}.step.done:before{background:var(--ink)}.step.done:after{background:var(--ink);border-color:var(--ink)}
+.step.cur{color:var(--red);font-weight:700}.step.cur:after{border-color:var(--red);background:var(--red)}
+.prog{height:10px;background:#eee;border-radius:99px;overflow:hidden;margin:6px 0}.prog i{display:block;height:100%;background:var(--ok)}
+.parcel-row.done td{color:var(--ok)}.parcel-row.done td:first-child:before{content:"✔ "}
+.mail{border-left:3px solid var(--blue);padding:8px 12px;background:#fff;margin-bottom:8px;border-radius:0 8px 8px 0}
+.mail .h{font-size:12px;color:var(--mute)}
+.note{background:#fff;border:1px dashed #c9c9ce;border-radius:10px;padding:10px 12px;font-size:12px;color:var(--mute);margin-bottom:14px}
+.right{text-align:right}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:9;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1}
+@media(max-width:600px){main{padding:10px}.card{padding:12px}.scan input{font-size:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div class="logo"><b>COSHIP</b> 한국발 항공 합포장 시스템</div>
+    <span class="demo">1차 데모 · 실제 개인정보 입력 금지</span>
+    <div class="clock"><span id="clk"></span>
+      <button class="btn ghost sm" data-act="time" title="시간 경과 시뮬레이션">+1일 경과</button>
+      <button class="btn ghost sm" data-act="reset">데모 초기화</button></div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 저장 / 기본값 ===== */
+const KEY='coship-air-demo-v2';
+const DAY=864e5;
+const BOXES={S:[30,20,15],M:[40,30,25],L:[50,40,30],XL:[60,50,40]};
+const CARRIERS=['EMS','DHL','UPS','FedEx'];
+const STEPS=[['submitted','접수'],['receiving','입고중'],['ready','포장대기'],['invoiced','청구'],['paid','입금확인'],['shipped','출고']];
+const ST_LABEL=Object.fromEntries(STEPS);
+let S=null;
+function load(){try{const t=localStorage.getItem(KEY);return t?JSON.parse(t):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function now(){return Date.now()+(S.offsetDays||0)*DAY}
+function seed(){
+  const t=Date.now();
+  const d=n=>t-n*DAY;
+  const s={offsetDays:0,seq:{req:1004,parcel:13,box:2002,inv:3002,bin:4,unk:1},
+    cfg:{free:5,extra:3000,fx:1000,storage:30,unpaidDays:5,lateDays:7},
+    customers:[
+      {id:'CS-7K3QP',name:'김하나',email:'hana@example.com',phone:'604-000-0001',cur:'KRW',dest:'CA',addr:'Coquitlam, BC',joined:d(20)},
+      {id:'CS-M4T9X',name:'이준호',email:'junho@example.com',phone:'213-000-0002',cur:'KRW',dest:'US',addr:'Los Angeles, CA',joined:d(15)},
+      {id:'CS-Q8R2W',name:'Emily Park',email:'emily@example.com',phone:'778-000-0003',cur:'CAD',dest:'CA',addr:'Burnaby, BC',joined:d(30)},
+      {id:'CS-H6P3D',name:'박민수',email:'minsu@example.com',phone:'416-000-0004',cur:'KRW',dest:'CA',addr:'Toronto, ON',joined:d(25)}],
+    requests:[
+      {id:'R1001',cust:'CS-7K3QP',dest:'CA',created:d(9),bin:'A-01',partial:false},
+      {id:'R1002',cust:'CS-M4T9X',dest:'US',created:d(6),bin:'A-02',partial:false,readyAt:d(2)},
+      {id:'R1003',cust:'CS-Q8R2W',dest:'CA',created:d(12),bin:'A-03',partial:false},
+      {id:'R1004',cust:'CS-H6P3D',dest:'CA',created:d(10),bin:'A-04',partial:false}],
+    parcels:[
+      {code:'CP0001',req:'R1001',mall:'쿠팡',trk:'5512-3301-0001',desc:'주방용품',qty:2,val:32000,recv:true,recvAt:d(7),bin:'A-01'},
+      {code:'CP0002',req:'R1001',mall:'쿠팡',trk:'5512-3301-0002',desc:'주방용품(2박스째)',qty:1,val:0,recv:true,recvAt:d(7),bin:'A-01'},
+      {code:'CP0003',req:'R1001',mall:'무신사',trk:'6620-8812-4410',desc:'의류',qty:2,val:89000,recv:true,recvAt:d(5),bin:'A-01'},
+      {code:'CP0004',req:'R1001',mall:'올리브영',trk:'3301-2245-7789',desc:'스킨케어(비에어로졸)',qty:3,val:45000,recv:false},
+      {code:'CP0005',req:'R1001',mall:'교보문고',trk:'',desc:'도서',qty:4,val:60000,recv:false},
+      {code:'CP0006',req:'R1002',mall:'네이버쇼핑',trk:'7781-0021-3345',desc:'블루투스 스피커(배터리 내장)',qty:1,val:59000,recv:true,recvAt:d(4),bin:'A-02'},
+      {code:'CP0007',req:'R1002',mall:'지마켓',trk:'7781-0021-3346',desc:'양말',qty:10,val:15000,recv:true,recvAt:d(3),bin:'A-02'},
+      {code:'CP0008',req:'R1002',mall:'29CM',trk:'4410-9921-0007',desc:'가방',qty:1,val:120000,recv:true,recvAt:d(2),bin:'A-02'},
+      {code:'CP0009',req:'R1003',mall:'Ably',trk:'2201-4455-8800',desc:'의류',qty:3,val:76000,recv:true,recvAt:d(10),bin:'A-03',packed:true},
+      {code:'CP0010',req:'R1003',mall:'오늘의집',trk:'2201-4455-8801',desc:'쿠션커버',qty:2,val:30000,recv:true,recvAt:d(9),bin:'A-03',packed:true},
+      {code:'CP0011',req:'R1004',mall:'SSF샵',trk:'9902-1100-2231',desc:'니트',qty:1,val:99000,recv:true,recvAt:d(8),bin:'A-04',packed:true},
+      {code:'CP0012',req:'R1004',mall:'무신사',trk:'9902-1100-2232',desc:'운동화',qty:1,val:129000,recv:true,recvAt:d(7),bin:'A-04',packed:true},
+      {code:'CP0013',req:'R1004',mall:'쿠팡',trk:'9902-1100-2233',desc:'생활용품',qty:3,val:21000,recv:true,recvAt:d(7),bin:'A-04',packed:true}],
+    boxes:[
+      {id:'BX2001',req:'R1003',parcels:['CP0009','CP0010'],type:'M',weight:3.2,chg:5,at:d(7)},
+      {id:'BX2002',req:'R1004',parcels:['CP0011','CP0012','CP0013'],type:'L',weight:6.8,chg:10,at:d(5)}],
+    invoices:[
+      {id:'INV3001',req:'R1003',box:'BX2001',cur:'CAD',freight:90,extra:0,total:90,at:d(7),paid:false},
+      {id:'INV3002',req:'R1004',box:'BX2002',cur:'KRW',freight:150000,extra:0,total:150000,at:d(5),paid:true,paidAt:d(3),paidBy:'한국지사 재무',paidAmt:150000}],
+    unknown:[{trk:'6409-1122-3344',at:d(3),bin:'U-01',note:'수취인명: 최OO (고객코드 없음)'}],
+    events:[],mails:[]};
+  return s;
+}
+S=load()||seed();
+
+/* ===== 공통 유틸 ===== */
+const UI={tab:'dash',rows:[{mall:'',trk:'',desc:'',qty:1,val:''}],inMsg:null,lastLabel:null,packReq:null,packScanned:[],packMsg:null,pack:{box:'M',w:''},
+  shipBox:null,shipMsg:null,fin:'KRW',finMsg:null,portal:{cid:'',code:null,tries:0,ok:false,msg:null},signupDone:null,newReqOpen:false};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtD=t=>{const x=new Date(t);return `${x.getMonth()+1}/${x.getDate()}`};
+const fmtDT=t=>{const x=new Date(t);return `${x.getMonth()+1}/${x.getDate()} ${String(x.getHours()).padStart(2,'0')}:${String(x.getMinutes()).padStart(2,'0')}`};
+const days=t=>Math.floor((now()-t)/DAY);
+const money=(v,c)=>c==='CAD'?'C$'+Number(v).toFixed(2):'₩'+Math.round(v).toLocaleString('ko-KR');
+const cust=id=>S.customers.find(c=>c.id===id);
+const req=id=>S.requests.find(r=>r.id===id);
+const parcelsOf=id=>S.parcels.filter(p=>p.req===id);
+const invOf=id=>S.invoices.find(i=>i.req===id);
+const boxesOf=id=>S.boxes.filter(b=>b.req===id);
+function log(type,msg){S.events.unshift({at:now(),type,msg})}
+function mail(to,subj,body){S.mails.unshift({at:now(),to,subj,body})}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
+function rid(n){const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<n;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function barcode(code){let x=0,b='';for(const ch of code){const n=ch.charCodeAt(0);for(let i=0;i<7;i++){const w=((n>>i)&1)?3:1.4;if(i%2===0)b+=`<rect x="${x}" y="0" width="${w}" height="40"/>`;x+=w+1.6}x+=2}return `<svg class="bc" viewBox="0 0 ${x} 40" preserveAspectRatio="none">${b}</svg>`}
+
+function eligible(r){const ps=parcelsOf(r.id);return r.partial?ps.filter(p=>p.recv):ps}
+function isHold(r){return !!r.hold||parcelsOf(r.id).some(p=>p.hold)}
+function status(r){
+  const bx=boxesOf(r.id);if(bx.length&&bx.every(b=>b.shipped))return 'shipped';
+  const inv=invOf(r.id);if(inv&&inv.paid)return 'paid';if(inv)return 'invoiced';
+  const ps=parcelsOf(r.id),rec=ps.filter(p=>p.recv);
+  if(ps.length&&rec.length===ps.length)return 'ready';
+  if(r.partial&&rec.length)return 'ready';
+  if(rec.length)return 'receiving';return 'submitted';
+}
+function chargeable(type,w){const [a,b,c]=BOXES[type];const vol=a*b*c/6000;return Math.ceil(Math.max(w,vol)*2)/2}
+function tariffKRW(kg,dest){const base=30000+kg*12000;return Math.round(base*(dest==='US'?1.1:1)/100)*100}
+function assignBin(r){if(!r.bin){S.seq.bin++;r.bin='A-'+String(S.seq.bin).padStart(2,'0')}return r.bin}
+function counts(){
+  const open=S.requests.filter(r=>status(r)!=='shipped');
+  return {
+    open:open.length,
+    waitParcels:S.parcels.filter(p=>!p.recv).length,
+    ready:open.filter(r=>status(r)==='ready'&&!isHold(r)).length,
+    unpaid:S.invoices.filter(i=>!i.paid).length,
+    unpaidLate:S.invoices.filter(i=>!i.paid&&days(i.at)>=S.cfg.unpaidDays).length,
+    shipReady:S.boxes.filter(b=>!b.shipped&&invOf(b.req)?.paid).length,
+    hold:open.filter(isHold).length,
+    unknown:S.unknown.length,
+    late:S.parcels.filter(p=>!p.recv&&days(req(p.req).created)>=S.cfg.lateDays).length
+  };
+}
+
+/* ===== 네비게이션 ===== */
+const NAV=[
+  ['고객',[['signup','① 회원 등록'],['portal','② 내 페이지 (출고신청·조회)']]],
+  ['창고 (한국지사)',[['tasks','작업 목록'],['inbound','입고 스캔'],['pack','합포장·실측'],['ship','출고 스캔']]],
+  ['재무',[['finance','입금확인']]],
+  ['관리',[['dash','예외 대시보드'],['custs','고객 목록'],['log','이벤트 기록'],['mails','발송 메일함'],['cfg','요금 설정']]]];
+function renderNav(){
+  const c=counts();
+  const badge={dash:c.unknown+c.hold+c.unpaidLate+c.late,pack:c.ready,ship:c.shipReady,finance:c.unpaid};
+  document.getElementById('nav').innerHTML=NAV.map(([g,items])=>`<div class="grp"><span class="gl">${g}</span>${items.map(([k,l])=>`<button data-act="tab" data-v="${k}" class="${UI.tab===k?'on':''}">${l}${badge[k]?`<span class="badge">${badge[k]}</span>`:''}</button>`).join('')}</div>`).join('');
+  const d=new Date(now());document.getElementById('clk').textContent=`데모 시각 ${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}${S.offsetDays?` (+${S.offsetDays}일)`:''}`;
+}
+function msgBox(m){return m?`<div class="msg ${m.t}">${m.m}</div>`:''}
+function stepper(r){const st=status(r);const idx=STEPS.findIndex(s=>s[0]===st);
+  return `<div class="steps">${STEPS.map((s,i)=>`<div class="step ${i<idx?'done':''} ${i===idx?'cur':''}">${s[1]}</div>`).join('')}</div>`}
+function stPill(r){const st=status(r);const cls={submitted:'',receiving:'p-blue',ready:'p-warn',invoiced:'p-warn',paid:'p-ok',shipped:'p-ok'}[st];
+  return `<span class="pill ${cls}">${ST_LABEL[st]}</span>${isHold(r)?' <span class="pill p-err">보류</span>':''}${r.partial&&st!=='shipped'?' <span class="pill p-blue">일부 먼저 발송</span>':''}`}
+
+/* ===== 화면: ① 회원 등록 ===== */
+function vSignup(){
+  if(UI.signupDone){const c=cust(UI.signupDone);
+    return `<h2>회원 등록 완료</h2><div class="card"><div class="msg ok">고객번호가 발급되었습니다. 안내 메일이 발송되었습니다.</div>
+    <p>고객번호 <b class="mono" style="font-size:22px">${c.id}</b></p>
+    <div class="note" style="color:var(--ink)"><b>한국 쇼핑몰 주문 방법</b><br>1. 받는 주소: <b>경기도 고양시 일산동구 고봉로678번길 146</b> (코쉽 한국지사)<br>2. 수취인명: <b>${esc(c.name)} ${c.id}</b> ← 반드시 고객번호를 붙여 주세요<br>3. 주문 후 [내 페이지]에서 출고신청을 만들고 주문한 소포를 등록하세요</div>
+    <div class="row"><button class="btn red" data-act="goPortal" data-v="${c.id}">내 페이지로 (출고신청)</button><button class="btn ghost" data-act="newSignup">다른 고객 등록</button></div></div>`}
+  return `<h2>① 회원 등록</h2><p class="sub">처음 한 번만 등록합니다. 고객번호가 먼저 발급되어야 한국 쇼핑몰 주문 시 수취인명에 붙일 수 있습니다.</p>
+  <form class="card" data-form="signup" style="max-width:640px">
+   <div class="grid g2">
+    <div><label>이름</label><input name="name" required placeholder="홍길동"></div>
+    <div><label>이메일 (로그인 코드·안내 수신)</label><input name="email" type="email" required placeholder="name@example.com"></div>
+    <div><label>연락처</label><input name="phone" placeholder="604-000-0000"></div>
+    <div><label>결제 통화</label><select name="cur"><option value="KRW">원화 (한국지사 계좌이체)</option><option value="CAD">캐나다달러 (Interac e-Transfer)</option></select></div>
+    <div><label>기본 배송 국가</label><select name="dest"><option value="CA">캐나다</option><option value="US">미국</option></select></div>
+    <div><label>기본 배송지</label><input name="addr" placeholder="도시, 주 (데모)"></div>
+   </div>
+   <label style="color:var(--ink);margin-top:12px"><input type="checkbox" required style="width:auto"> 개인정보 수집·이용 (통관·배송 목적)에 동의합니다.</label>
+   ${msgBox(UI.signupMsg)}
+   <button class="btn red" type="submit" style="margin-top:10px">고객번호 발급받기</button>
+  </form>`;
+}
+function vCusts(){return `<h2>고객 목록</h2><p class="sub">모든 출고신청과 소포는 고객번호 아래에 연결됩니다.</p><div class="card tbl"><table><thead><tr><th>고객번호</th><th>이름</th><th>이메일</th><th>통화</th><th>기본 배송</th><th>가입</th><th>신청</th><th>진행 중</th></tr></thead><tbody>
+ ${S.customers.slice().sort((a,b)=>(b.joined||0)-(a.joined||0)).map(c=>{const rs=S.requests.filter(r=>r.cust===c.id);return `<tr><td class="mono"><b>${c.id}</b></td><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td>${c.cur}</td><td>${c.dest==='US'?'미국':'캐나다'} · ${esc(c.addr||'')}</td><td>${c.joined?fmtD(c.joined):''}</td><td>${rs.length}</td><td>${rs.filter(r=>status(r)!=='shipped').length}</td></tr>`}).join('')}</tbody></table></div>`}
+
+/* ===== 화면: 고객 페이지 ===== */
+function vPortal(){
+  const P=UI.portal;
+  if(!P.ok){return `<h2>내 배송 조회</h2><p class="sub">고객번호를 입력하면 등록된 이메일로 6자리 코드가 발송됩니다. 비밀번호는 없습니다.</p>
+   <div class="card" style="max-width:440px">
+    <form data-form="otpReq"><label>고객번호</label><div class="row"><input name="cid" value="${esc(P.cid)}" placeholder="CS-7K3QP" class="mono"><button class="btn">코드 받기</button></div></form>
+    ${P.code?`<form data-form="otpVerify" style="margin-top:12px"><label>이메일로 받은 6자리 코드</label><div class="row"><input name="code" inputmode="numeric" maxlength="6" class="mono"><button class="btn red">로그인</button></div>
+      <p class="hint">데모: 코드는 [관리 → 발송 메일함]에 있습니다. (빠른 확인: <span class="mono">${P.code}</span>) · 10분 유효 · 5회 실패 시 잠금</p></form>`:''}
+    ${msgBox(P.msg)}
+    <p class="hint">데모 고객번호: ${S.customers.map(c=>`<span class="chip" data-act="fillCid" data-v="${c.id}">${c.id}</span>`).join(' ')}</p>
+   </div>`}
+  const c=cust(P.cid);const rs=S.requests.filter(r=>r.cust===c.id).sort((a,b)=>b.created-a.created);
+  const newForm=UI.newReqOpen?`<form class="card" data-form="newReq"><h3 style="margin-top:0">새 출고신청</h3><p class="hint">해외로 한 번에 받을 묶음 단위입니다. 신청을 만든 뒤 주문한 소포를 등록하세요.</p>
+    <div class="grid g2"><div><label>목적지</label><select name="dest"><option value="CA" ${c.dest!=='US'?'selected':''}>캐나다</option><option value="US" ${c.dest==='US'?'selected':''}>미국</option></select></div>
+    <div><label>받는 사람</label><input name="rcpt" value="${esc(c.name)}"></div><div><label>배송지</label><input name="addr" value="${esc(c.addr||'')}"></div></div>
+    <label style="color:var(--ink)"><input type="checkbox" required style="width:auto"> 리튬배터리 단독, 스프레이, 인화성 액체 등 항공 금지품목이 없습니다.</label>
+    <label style="color:var(--ink)"><input type="checkbox" required style="width:auto"> 요금 기준(소포 ${S.cfg.free}개 무료, 이후 개당 ${money(S.cfg.extra,'KRW')}), 무료 보관 ${S.cfg.storage}일, 검수 범위(수량·외관)에 동의합니다.</label>
+    <div class="row" style="margin-top:10px"><button class="btn red">신청 만들기</button><button type="button" class="btn ghost" data-act="toggleNewReq">취소</button></div></form>`:'';
+  return `<div class="row"><div><h2>${esc(c.name)}님의 배송</h2><p class="sub mono">${c.id} · ${esc(c.email)}</p></div><button class="btn red sm" data-act="toggleNewReq">+ 새 출고신청</button><button class="btn ghost sm" data-act="logout">로그아웃</button></div>
+  ${newForm}
+  ${rs.map(r=>{const ps=parcelsOf(r.id),rec=ps.filter(p=>p.recv),inv=invOf(r.id),st=status(r),bx=boxesOf(r.id);
+    const first=Math.min(...rec.map(p=>p.recvAt));const exp=rec.length?first+S.cfg.storage*DAY:null;
+    return `<div class="card"><div class="row"><div><b class="mono">${r.id}</b> · ${r.dest==='US'?'미국':'캐나다'}행 · 신청 ${fmtD(r.created)}</div><div class="right">${stPill(r)}</div></div>
+     ${stepper(r)}
+     <p>입고 <b>${rec.length}/${ps.length}</b>${exp&&st!=='shipped'?` · 무료 보관 만료 <b>${fmtD(exp)}</b> (D-${Math.max(0,Math.ceil((exp-now())/DAY))})`:''}</p>
+     <div class="tbl"><table><thead><tr><th>쇼핑몰</th><th>품목</th><th>국내 송장</th><th>상태</th></tr></thead><tbody>
+     ${ps.map(p=>`<tr><td>${esc(p.mall)}</td><td>${esc(p.desc)}</td><td class="mono">${p.trk?esc(p.trk):`<div class="row"><input id="trk-${p.code}" placeholder="송장번호 입력" class="mono"><button class="btn sm" data-act="addTrk" data-id="${p.code}">저장</button></div>`}</td>
+       <td>${p.recv?`<span class="pill p-ok">입고 ${fmtD(p.recvAt)}</span> <span class="hint">사진 있음</span>`:'<span class="pill">입고 대기</span>'}${p.hold?' <span class="pill p-err">확인 필요</span>':''}</td></tr>`).join('')}
+     </tbody></table></div>
+     ${['submitted','receiving'].includes(st)&&!r.partial?`<div class="row" style="margin-top:10px;align-items:flex-end">
+       <div><label>쇼핑몰</label><input id="np-${r.id}-mall" placeholder="쿠팡"></div><div><label>국내 송장 (나중 가능)</label><input id="np-${r.id}-trk" class="mono"></div>
+       <div><label>품목</label><input id="np-${r.id}-desc" placeholder="의류"></div><div style="max-width:70px"><label>수량</label><input id="np-${r.id}-qty" type="number" value="1" min="1"></div>
+       <div style="max-width:110px"><label>금액(원)</label><input id="np-${r.id}-val" type="number" min="0"></div><button class="btn sm" data-act="addParcel" data-id="${r.id}">+ 소포 등록</button></div>
+       <p class="hint">소포 ${ps.length}개 · 예상 추가 입고 처리비 ${money(Math.max(0,ps.length-(r.rate?r.rate.free:S.cfg.free))*(r.rate?r.rate.extra:S.cfg.extra),'KRW')} · 한 쇼핑몰이 두 박스로 보내면 2개로 등록하세요${r.dest==='US'?' · 미국행은 금액 필수':''}</p>`:''}
+     ${st==='receiving'&&!r.partial?`<div class="row" style="margin-top:10px"><span class="hint">도착한 ${rec.length}개를 먼저 받고 싶으신가요? 나머지는 다음 발송 건으로 넘어갑니다.</span><button class="btn ghost sm" data-act="partial" data-id="${r.id}">도착분 먼저 발송 요청</button></div>`:''}
+     ${inv?`<h3>청구 내역</h3><table><tr><td>청구번호</td><td class="mono">${inv.id}</td></tr><tr><td>청구중량</td><td>${bx.map(b=>b.chg+'kg ('+b.type+' 박스, 실중량 '+b.weight+'kg)').join(', ')}</td></tr>
+       <tr><td>국제운임</td><td>${money(inv.freight,inv.cur)}</td></tr><tr><td>추가 입고 처리비</td><td>${money(inv.extra,inv.cur)}</td></tr><tr><td><b>합계</b></td><td><b>${money(inv.total,inv.cur)}</b></td></tr>
+       <tr><td>입금 상태</td><td>${inv.paid?`<span class="pill p-ok">입금확인 ${fmtD(inv.paidAt)}</span>`:'<span class="pill p-warn">입금 대기</span>'}</td></tr></table>
+       ${!inv.paid?`<div class="note" style="margin-top:10px">${inv.cur==='KRW'?`<b>입금 방법:</b> 한국지사 계좌로 이체 (데모: 실제 계좌로 교체) · 입금자명: <b>${esc(c.name)} ${inv.id}</b>`:`<b>입금 방법:</b> Interac e-Transfer (데모: 수신 이메일로 교체) · 메모란: <b>${inv.id}</b>`}<br>입금 확인 후 출고됩니다. 금액이 다르면 처리가 지연됩니다.</div>`:''}`:''}
+     ${bx.some(b=>b.shipped)?`<h3>배송 조회</h3>${bx.filter(b=>b.shipped).map(b=>`<p>${b.carrier} <b class="mono">${esc(b.trk)}</b> · 출고 ${fmtD(b.shippedAt)} <span class="hint">(운송사 공식 조회 링크)</span></p>`).join('')}`:''}
+    </div>`}).join('')||(UI.newReqOpen?'':'<div class="card">아직 출고신청이 없습니다. 한국 쇼핑몰에서 수취인명에 고객번호를 붙여 주문한 뒤 <b>+ 새 출고신청</b>을 눌러 소포를 등록하세요.</div>')}`;
+}
+
+/* ===== 화면: 작업 목록 ===== */
+function vTasks(){
+  const open=S.requests.filter(r=>status(r)!=='shipped');
+  const ready=open.filter(r=>status(r)==='ready'&&!isHold(r)).sort((a,b)=>(a.readyAt||a.created)-(b.readyAt||b.created));
+  const shipR=S.boxes.filter(b=>!b.shipped&&invOf(b.req)?.paid);
+  const recv=open.filter(r=>['submitted','receiving'].includes(status(r)));
+  return `<h2>오늘의 작업 목록</h2><p class="sub">직원은 위에서부터 처리합니다. 목록은 시스템이 자동으로 만듭니다.</p>
+  <div class="grid g2">
+   <div class="card"><h3 style="margin-top:0">1. 합포장 대기 (${ready.length})</h3>
+    ${ready.map(r=>`<div class="row" style="padding:6px 0;border-bottom:1px solid #f0f0f2"><div><b class="mono">${r.id}</b> ${esc(cust(r.cust).name)} · 소포 ${eligible(r).length}개 · 칸 ${r.bin}<br><span class="hint">대기 ${days(r.readyAt||r.created)}일</span></div><button class="btn sm" data-act="packStart" data-id="${r.id}">포장 시작</button></div>`).join('')||'<p class="hint">없음</p>'}</div>
+   <div class="card"><h3 style="margin-top:0">2. 출고 가능 (입금확인 완료) (${shipR.length})</h3>
+    ${shipR.map(b=>`<div class="row" style="padding:6px 0;border-bottom:1px solid #f0f0f2"><div><b class="mono">${b.id}</b> ${esc(cust(req(b.req).cust).name)} · ${b.chg}kg</div><button class="btn sm" data-act="tab" data-v="ship">출고로</button></div>`).join('')||'<p class="hint">없음</p>'}</div>
+   <div class="card"><h3 style="margin-top:0">3. 입고 진행 중 (${recv.length})</h3>
+    ${recv.map(r=>{const ps=parcelsOf(r.id),n=ps.filter(p=>p.recv).length;return `<div style="padding:6px 0;border-bottom:1px solid #f0f0f2"><b class="mono">${r.id}</b> ${esc(cust(r.cust).name)} · ${n}/${ps.length}<div class="prog"><i style="width:${ps.length?n/ps.length*100:0}%"></i></div></div>`}).join('')||'<p class="hint">없음</p>'}</div>
+  </div>`;
+}
+
+/* ===== 화면: 입고 스캔 ===== */
+function vInbound(){
+  const expected=S.parcels.filter(p=>!p.recv&&p.trk);
+  const lp=UI.lastLabel&&S.parcels.find(p=>p.code===UI.lastLabel);
+  let label='';
+  if(lp){const r=req(lp.req),ps=parcelsOf(r.id),idx=ps.indexOf(lp)+1;
+    label=`<div class="label"><div class="hint">COSHIP · ${r.dest==='US'?'USA':'CANADA'}</div>${barcode(lp.code)}<div class="big mono">${lp.code}</div>
+     <div class="row"><div><b class="mono">${cust(r.cust).id}</b><br>${esc(cust(r.cust).name)}</div><div class="right"><b style="font-size:20px">${idx}/${ps.length}</b><br>칸 <b>${lp.bin}</b></div></div>
+     <div class="hint">${r.id} · ${esc(lp.mall)} · 입고 ${fmtD(lp.recvAt)}</div></div>
+     <div class="row" style="margin-top:8px;max-width:340px"><button class="btn ghost sm" data-act="photo">사진 촬영</button><button class="btn ghost sm" data-act="hold" data-id="${lp.code}">금지품목 의심 → 보류</button></div>`}
+  return `<h2>입고 스캔</h2><p class="sub">국내 택배 송장 바코드를 스캔하면 신청 건과 자동 매칭되고, 코쉽 라벨과 보관 칸이 지정됩니다.</p>
+  <div class="grid g2"><div class="card">
+   <form data-form="inbound" class="scan"><input name="v" id="scanIn" placeholder="국내 송장번호 스캔" autocomplete="off" autofocus><button class="btn">입고</button></form>
+   ${msgBox(UI.inMsg)}
+   <div class="hint">데모 스캔 (클릭 = 스캔)</div><div class="chips">
+    ${expected.map(p=>`<span class="chip" data-act="sample" data-f="inbound" data-v="${p.trk}">${p.trk}</span>`).join('')}
+    <span class="chip bad" data-act="sample" data-f="inbound" data-v="5512-3301-0001">5512-3301-0001 (중복)</span>
+    <span class="chip bad" data-act="sample" data-f="inbound" data-v="8800-1234-5678">8800-1234-5678 (미등록)</span></div>
+  </div><div>${label||'<div class="note">스캔하면 여기에 출력될 라벨이 표시됩니다.</div>'}</div></div>`;
+}
+
+/* ===== 화면: 합포장·실측 ===== */
+function vPack(){
+  const open=S.requests.filter(r=>status(r)==='ready'&&!isHold(r)).sort((a,b)=>(a.readyAt||a.created)-(b.readyAt||b.created));
+  if(!UI.packReq||!req(UI.packReq)||status(req(UI.packReq))!=='ready'){
+    UI.packReq=null;
+    return `<h2>합포장·실측</h2><p class="sub">전량 입고된 건만 여기에 나타납니다. 보류 건은 제외됩니다.</p>${msgBox(UI.packMsg)}
+    <div class="card">${open.map(r=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #f0f0f2"><div><b class="mono">${r.id}</b> ${esc(cust(r.cust).name)} (${r.cust}) · 소포 ${eligible(r).length}개 · 칸 <b>${r.bin}</b> ${r.partial?'<span class="pill p-blue">일부 먼저 발송</span>':''}<br><span class="hint">포장 대기 ${days(r.readyAt||r.created)}일</span></div><button class="btn" data-act="packStart" data-id="${r.id}">포장 시작</button></div>`).join('')||'<p class="hint">포장 대기 건이 없습니다. 입고 스캔에서 남은 소포를 입고해 보세요.</p>'}</div>`}
+  const r=req(UI.packReq),el=eligible(r).slice().sort((a,b)=>(a.bin||'').localeCompare(b.bin||'')),sc=UI.packScanned,all=el.length===sc.length;
+  const foreign=S.parcels.find(p=>p.req!==r.id&&p.recv&&!p.packed);
+  const w=parseFloat(UI.pack.w);const chg=w>0?chargeable(UI.pack.box,w):0;
+  const n=el.length,extraK=Math.max(0,n-S.cfg.free)*S.cfg.extra,frK=chg?tariffKRW(chg,r.dest):0,c=cust(r.cust);
+  const f=v=>c.cur==='CAD'?Math.round(v/S.cfg.fx*100)/100:v;
+  return `<div class="row"><div><h2>합포장 · <span class="mono">${r.id}</span></h2><p class="sub">${esc(c.name)} (${c.id}) · ${r.dest==='US'?'미국':'캐나다'}행 · 보관 칸 ${r.bin}</p></div><button class="btn ghost sm" data-act="packCancel">목록으로</button></div>
+  <div class="grid g2"><div class="card">
+   <h3 style="margin-top:0">1. 소포를 하나씩 스캔해 박스에 담기</h3>
+   <form data-form="pack" class="scan"><input name="v" id="scanIn" placeholder="코쉽 라벨 스캔 (CP....)" autocomplete="off"><button class="btn">스캔</button></form>
+   ${msgBox(UI.packMsg)}
+   <div class="prog"><i style="width:${sc.length/n*100}%"></i></div><p><b>${sc.length}/${n}</b> 담음</p>
+   <table><thead><tr><th>라벨</th><th>쇼핑몰·품목</th><th>칸</th></tr></thead><tbody>
+   ${el.map(p=>`<tr class="parcel-row ${sc.includes(p.code)?'done':''}"><td class="mono">${p.code}</td><td>${esc(p.mall)} · ${esc(p.desc)}</td><td>${p.bin}</td></tr>`).join('')}</tbody></table>
+   <div class="hint" style="margin-top:8px">데모 스캔</div><div class="chips">${el.filter(p=>!sc.includes(p.code)).map(p=>`<span class="chip" data-act="sample" data-f="pack" data-v="${p.code}">${p.code}</span>`).join('')}
+    ${foreign?`<span class="chip bad" data-act="sample" data-f="pack" data-v="${foreign.code}">${foreign.code} (다른 고객)</span>`:''}
+    ${sc[0]?`<span class="chip bad" data-act="sample" data-f="pack" data-v="${sc[0]}">${sc[0]} (중복)</span>`:''}</div>
+  </div>
+  <div class="card"><h3 style="margin-top:0">2. 실측 (표준 박스 + 저울)</h3>
+   <label>박스 규격</label><select id="boxSel">${Object.entries(BOXES).map(([k,v])=>`<option value="${k}" ${UI.pack.box===k?'selected':''}>${k} · ${v.join('×')}cm (부피중량 ${(v[0]*v[1]*v[2]/6000).toFixed(1)}kg)</option>`).join('')}</select>
+   <label>실중량 (kg)</label><div class="row"><input id="wIn" type="number" step="0.1" min="0" value="${esc(UI.pack.w)}"><button class="btn ghost" data-act="scale">저울 읽기</button></div>
+   <table style="margin-top:12px"><tr><td>청구중량</td><td class="right"><b>${chg?chg+'kg':'-'}</b></td></tr>
+    <tr><td>국제운임 <span class="hint">(데모 요율)</span></td><td class="right">${chg?money(f(frK),c.cur):'-'}</td></tr>
+    <tr><td>추가 입고 처리비 (${n}개 중 ${Math.max(0,n-S.cfg.free)}개)</td><td class="right">${money(f(extraK),c.cur)}</td></tr>
+    <tr><td><b>청구 합계</b></td><td class="right"><b>${chg?money(f(frK)+f(extraK),c.cur):'-'}</b></td></tr></table>
+   <button class="btn red" style="width:100%;margin-top:12px" data-act="packDone" ${all&&chg?'':'disabled'}>포장 완료 → 청구서 자동 발송</button>
+   <p class="hint">${!all?`소포 ${n-sc.length}개가 아직 스캔되지 않아 완료할 수 없습니다.`:!chg?'무게를 입력하세요.':'완료하면 청구서가 고객 이메일로 자동 발송됩니다.'}</p>
+  </div></div>`;
+}
+
+/* ===== 화면: 출고 ===== */
+function vShip(){
+  const ready=S.boxes.filter(b=>!b.shipped&&invOf(b.req)?.paid),wait=S.boxes.filter(b=>!b.shipped&&invOf(b.req)&&!invOf(b.req).paid);
+  const sb=UI.shipBox&&S.boxes.find(b=>b.id===UI.shipBox);
+  return `<h2>출고 스캔</h2><p class="sub">운송사 인계 직전에 박스를 스캔합니다. 입금확인되지 않은 박스는 시스템이 출고를 막습니다.</p>
+  <div class="grid g2"><div class="card">
+   <form data-form="ship" class="scan"><input name="v" id="scanIn" placeholder="박스 라벨 스캔 (BX....)" autocomplete="off"><button class="btn">확인</button></form>
+   ${msgBox(UI.shipMsg)}
+   ${sb?`<form data-form="shipDone" style="margin-top:8px"><b class="mono">${sb.id}</b> · ${esc(cust(req(sb.req).cust).name)} · ${sb.chg}kg
+     <div class="row"><div><label>운송사</label><select name="carrier">${CARRIERS.map(c=>`<option>${c}</option>`).join('')}</select></div><div><label>운송사 송장 스캔</label><input name="trk" required class="mono" placeholder="스캔 또는 입력"></div></div>
+     <button class="btn red" style="margin-top:10px">인계 완료 → 트래킹 자동 안내</button> <span class="chip" data-act="fakeTrk">데모 송장 채우기</span></form>`:''}
+   <div class="hint" style="margin-top:10px">데모 스캔</div><div class="chips">${ready.map(b=>`<span class="chip" data-act="sample" data-f="ship" data-v="${b.id}">${b.id}</span>`).join('')}${wait.map(b=>`<span class="chip bad" data-act="sample" data-f="ship" data-v="${b.id}">${b.id} (미입금)</span>`).join('')}</div>
+  </div><div>
+   <div class="card"><h3 style="margin-top:0">출고 가능 선반 (${ready.length})</h3>${ready.map(b=>`<p class="mono">${b.id} · ${req(b.req).id} · ${b.chg}kg</p>`).join('')||'<p class="hint">없음</p>'}</div>
+   <div class="card"><h3 style="margin-top:0">결제대기 선반 (${wait.length})</h3>${wait.map(b=>`<p><span class="mono">${b.id}</span> · 청구 ${days(invOf(b.req).at)}일 경과</p>`).join('')||'<p class="hint">없음</p>'}</div>
+  </div></div>`;
+}
+
+/* ===== 화면: 재무 입금확인 ===== */
+function vFinance(){
+  const list=S.invoices.filter(i=>i.cur===UI.fin&&!i.paid).sort((a,b)=>a.at-b.at);
+  const paid=S.invoices.filter(i=>i.cur===UI.fin&&i.paid).sort((a,b)=>b.paidAt-a.paidAt).slice(0,5);
+  return `<h2>입금확인</h2><p class="sub">은행과 연동하지 않습니다. 담당자가 실제 입금 내역을 보고 금액을 입력하면, 청구액과 일치할 때만 승인됩니다.</p>
+  <div class="row" style="margin-bottom:12px;max-width:520px"><button class="btn ${UI.fin==='KRW'?'':'ghost'}" data-act="fin" data-v="KRW">한국지사 (원화)</button><button class="btn ${UI.fin==='CAD'?'':'ghost'}" data-act="fin" data-v="CAD">밴쿠버 본사 (CAD)</button>
+   <input id="finUser" value="${UI.fin==='KRW'?'한국지사 재무':'본사 재무'}" style="max-width:160px"></div>
+  ${msgBox(UI.finMsg)}
+  <div class="card tbl"><table><thead><tr><th>청구번호</th><th>고객</th><th>입금자명/메모에 있어야 할 값</th><th>청구액</th><th>경과</th><th>실제 입금액</th><th></th></tr></thead><tbody>
+  ${list.map(i=>{const c=cust(req(i.req).cust);const late=days(i.at)>=S.cfg.unpaidDays;return `<tr><td class="mono">${i.id}</td><td>${esc(c.name)}</td><td class="mono">${i.cur==='KRW'?esc(c.name)+' '+i.id:i.id}</td><td><b>${money(i.total,i.cur)}</b></td>
+   <td>${late?`<span class="pill p-err">${days(i.at)}일</span>`:days(i.at)+'일'}</td><td style="width:140px"><input id="amt-${i.id}" type="number" step="0.01" placeholder="${i.total}"></td><td><button class="btn sm" data-act="pay" data-id="${i.id}">입금확인</button></td></tr>`}).join('')||'<tr><td colspan="7" class="hint">미입금 청구가 없습니다.</td></tr>'}
+  </tbody></table><p class="hint">데모: 부분 금액을 넣으면 승인 거부를 확인할 수 있습니다. 미입금 2일·5일차 독촉 메일은 자동 발송됩니다.</p></div>
+  <div class="card"><h3 style="margin-top:0">최근 확인 완료</h3>${paid.map(i=>`<div class="row" style="padding:4px 0"><div><span class="mono">${i.id}</span> ${money(i.paidAmt,i.cur)} · ${esc(i.paidBy)} · ${fmtDT(i.paidAt)}</div><button class="btn ghost sm" data-act="pay" data-id="${i.id}">다시 확인 (중복 테스트)</button></div>`).join('')||'<p class="hint">없음</p>'}</div>`;
+}
+
+/* ===== 화면: 예외 대시보드 ===== */
+function vDash(){
+  const c=counts(),open=S.requests.filter(r=>status(r)!=='shipped');
+  const late=S.parcels.filter(p=>!p.recv&&days(req(p.req).created)>=S.cfg.lateDays);
+  const unpaid=S.invoices.filter(i=>!i.paid);
+  const holds=S.parcels.filter(p=>p.hold);
+  const waitPack=open.filter(r=>status(r)==='ready'&&!isHold(r));
+  const exp=open.map(r=>{const rec=parcelsOf(r.id).filter(p=>p.recv);if(!rec.length)return null;const e=Math.min(...rec.map(p=>p.recvAt))+S.cfg.storage*DAY;return {r,left:Math.ceil((e-now())/DAY)}}).filter(x=>x&&x.left<=7);
+  const k=(n,t,al)=>`<div class="kpi ${al&&n?'alert':''}"><div class="n">${n}</div><div class="t">${t}</div></div>`;
+  return `<h2>예외 대시보드</h2><p class="sub">정상 건은 자동으로 흘러갑니다. 사람이 볼 것은 여기뿐입니다.</p>
+  <div class="kpis">${k(c.open,'진행 중 신청')}${k(c.waitParcels,'입고 대기 소포')}${k(c.ready,'포장 대기')}${k(c.unpaid,'미입금 청구')}${k(c.shipReady,'출고 가능 박스')}${k(c.unknown,'미확인 입고',1)}${k(c.hold,'보류',1)}${k(c.late,'장기 미입고',1)}${k(c.unpaidLate,'미입금 '+S.cfg.unpaidDays+'일+',1)}</div>
+  <div class="grid g2">
+   <div class="card"><h3 style="margin-top:0">미확인 입고 (주인 없는 소포)</h3>
+    ${S.unknown.map((u,i)=>`<div style="padding:6px 0;border-bottom:1px solid #f0f0f2"><b class="mono">${esc(u.trk)}</b> · 칸 ${u.bin} · ${days(u.at)}일 전<br><span class="hint">${esc(u.note||'')}</span>
+      <div class="row" style="margin-top:6px"><select id="uk-${i}">${open.filter(r=>['submitted','receiving'].includes(status(r))).map(r=>`<option value="${r.id}">${r.id} ${esc(cust(r.cust).name)}</option>`).join('')}</select><button class="btn sm" data-act="ukLink" data-i="${i}">이 신청 건에 연결</button></div></div>`).join('')||'<p class="hint">없음</p>'}</div>
+   <div class="card"><h3 style="margin-top:0">보류 (금지품목 의심 등)</h3>
+    ${holds.map(p=>`<div class="row" style="padding:6px 0;border-bottom:1px solid #f0f0f2"><div><b class="mono">${p.code}</b> ${esc(p.desc)} · ${p.req} ${esc(cust(req(p.req).cust).name)}</div><button class="btn ghost sm" data-act="unhold" data-id="${p.code}">확인 완료·해제</button></div>`).join('')||'<p class="hint">없음</p>'}</div>
+   <div class="card"><h3 style="margin-top:0">장기 미입고 (${S.cfg.lateDays}일+)</h3>
+    ${late.map(p=>`<p><b class="mono">${p.req}</b> ${esc(cust(req(p.req).cust).name)} · ${esc(p.mall)} ${esc(p.desc)} · ${p.trk?`<span class="mono">${esc(p.trk)}</span>`:'<span class="pill p-warn">송장 미등록</span>'} · 신청 ${days(req(p.req).created)}일</p>`).join('')||'<p class="hint">없음</p>'}
+    <p class="hint">실서비스: 고객에게 "도착분 먼저 발송" 여부를 묻는 메일 자동 발송</p></div>
+   <div class="card"><h3 style="margin-top:0">미입금</h3>
+    ${unpaid.map(i=>`<p><b class="mono">${i.id}</b> ${esc(cust(req(i.req).cust).name)} · ${money(i.total,i.cur)} · ${days(i.at)>=S.cfg.unpaidDays?`<span class="pill p-err">${days(i.at)}일</span>`:days(i.at)+'일'}</p>`).join('')||'<p class="hint">없음</p>'}</div>
+   <div class="card"><h3 style="margin-top:0">포장 대기</h3>
+    ${waitPack.map(r=>`<p><b class="mono">${r.id}</b> ${esc(cust(r.cust).name)} · 대기 ${days(r.readyAt||r.created)}일</p>`).join('')||'<p class="hint">없음</p>'}</div>
+   <div class="card"><h3 style="margin-top:0">무료 보관 만료 임박 (7일 이내)</h3>
+    ${exp.map(x=>`<p><b class="mono">${x.r.id}</b> ${esc(cust(x.r.cust).name)} · ${x.left<0?`<span class="pill p-err">${-x.left}일 초과</span>`:'D-'+x.left}</p>`).join('')||'<p class="hint">없음</p>'}</div>
+  </div>`;
+}
+function vLog(){return `<h2>이벤트 기록</h2><p class="sub">모든 스캔과 승인이 담당자·시간과 함께 남습니다. 클레임 대응 근거입니다.</p><div class="card tbl"><table><thead><tr><th>시각</th><th>구분</th><th>내용</th></tr></thead><tbody>${S.events.map(e=>`<tr><td class="mono" style="white-space:nowrap">${fmtDT(e.at)}</td><td><span class="pill ${e.type==='차단'?'p-err':e.type==='경고'?'p-warn':''}">${esc(e.type)}</span></td><td>${e.msg}</td></tr>`).join('')||'<tr><td colspan="3" class="hint">아직 기록이 없습니다. 다른 화면에서 작업해 보세요.</td></tr>'}</tbody></table></div>`}
+function vMails(){return `<h2>발송 메일함 (데모)</h2><p class="sub">실서비스에서는 고객 이메일로 실제 발송됩니다. 메일에는 금액·주소를 넣지 않고 고객 페이지 링크만 보냅니다.</p>${S.mails.map(m=>`<div class="mail"><div class="h">${fmtDT(m.at)} · 받는 사람 ${esc(m.to)}</div><b>${esc(m.subj)}</b><div>${esc(m.body)}</div></div>`).join('')||'<div class="card hint">아직 발송된 메일이 없습니다.</div>'}`}
+function vCfg(){const c=S.cfg;const f=(k,l,u)=>`<div><label>${l}</label><div class="row"><input type="number" data-cfg="${k}" value="${c[k]}"><span class="hint" style="flex:0 0 auto">${u}</span></div></div>`;
+  return `<h2>요금·운영 설정</h2><p class="sub">시범 운영 데이터로 확정할 값들입니다. 신청 시점의 요율이 건별로 저장되어, 나중에 바꿔도 기존 건에는 적용되지 않습니다 (실서비스).</p>
+  <div class="card grid g2">${f('free','무료 합포장 소포 수','개')}${f('extra','6번째부터 개당 처리비','원')}${f('fx','환율 (1 CAD =)','원')}${f('storage','무료 보관','일')}${f('unpaidDays','미입금 경고','일')}${f('lateDays','장기 미입고 경고','일')}</div>
+  <div class="note">국제운임은 데모용 임시 공식(30,000원 + kg당 12,000원, 미국 +10%)입니다. 실제 항공 요율표로 교체해야 합니다. 부피중량 = 가로×세로×높이÷6000, 0.5kg 단위 올림.</div>`}
+
+/* ===== 렌더 ===== */
+const VIEWS={signup:vSignup,custs:vCusts,portal:vPortal,tasks:vTasks,inbound:vInbound,pack:vPack,ship:vShip,finance:vFinance,dash:vDash,log:vLog,mails:vMails,cfg:vCfg};
+function render(){renderNav();document.getElementById('app').innerHTML=VIEWS[UI.tab]();const s=document.getElementById('scanIn');if(s)s.focus();try{history.replaceState(null,'','#'+UI.tab)}catch(e){}}
+
+/* ===== 동작 ===== */
+function doInbound(v){
+  v=v.trim();if(!v)return;
+  const p=S.parcels.find(x=>x.trk===v);
+  if(p){
+    if(p.recv){UI.inMsg={t:'err',m:`중복 입고 차단 · ${esc(v)} 는 ${fmtD(p.recvAt)}에 이미 입고되었습니다 (${p.code}).`};log('차단',`중복 입고 시도 ${esc(v)}`)}
+    else{const r=req(p.req);assignBin(r);p.recv=true;p.recvAt=now();p.bin=r.bin;UI.lastLabel=p.code;
+      const ps=parcelsOf(r.id),n=ps.filter(x=>x.recv).length;
+      UI.inMsg={t:'ok',m:`매칭 완료 · ${r.id} ${esc(cust(r.cust).name)} · ${n}/${ps.length} · 라벨 ${p.code} 출력 → 칸 ${r.bin}`};
+      log('입고',`${p.code} (${esc(v)}) → ${r.id}, 칸 ${r.bin}`);
+      if(status(r)==='ready'){r.readyAt=now();log('자동',`${r.id} 전량 입고 → 합포장 작업 자동 생성`);UI.inMsg.m+=' · <b>전량 입고 → 합포장 작업 생성</b>'}}
+  }else if(S.unknown.some(u=>u.trk===v)){UI.inMsg={t:'err',m:`중복 · ${esc(v)} 는 이미 미확인 칸에 있습니다.`}}
+  else{S.seq.unk++;const bin='U-'+String(S.seq.unk).padStart(2,'0');S.unknown.push({trk:v,at:now(),bin,note:'사전 등록 없음'});UI.lastLabel=null;
+    UI.inMsg={t:'warn',m:`미등록 송장 · ${esc(v)} → 미확인 칸 ${bin}에 보관하고 예외 대시보드로 보냈습니다.`};log('경고',`미확인 입고 ${esc(v)} → ${bin}`)}
+  save();render();
+}
+function doPack(v){
+  v=v.trim().toUpperCase();if(!v)return;const r=req(UI.packReq);const p=S.parcels.find(x=>x.code===v);const el=eligible(r);
+  if(!p){UI.packMsg={t:'err',m:`등록되지 않은 바코드 ${esc(v)}`}}
+  else if(p.req!==r.id){UI.packMsg={t:'err',m:`다른 고객 소포입니다! ${p.code} → ${p.req} ${esc(cust(req(p.req).cust).name)}. 이 박스에 넣지 마세요.`};log('차단',`${r.id} 포장 중 타 고객 소포 ${p.code} 스캔`)}
+  else if(!el.includes(p)){UI.packMsg={t:'err',m:`${p.code}는 아직 출고 대상이 아닙니다.`}}
+  else if(UI.packScanned.includes(p.code)){UI.packMsg={t:'err',m:`중복 스캔 ${p.code} · 이미 담았습니다.`}}
+  else{UI.packScanned.push(p.code);UI.packMsg={t:'ok',m:`${p.code} 담음 (${UI.packScanned.length}/${el.length})`}}
+  render();
+}
+function packDone(){
+  const r=req(UI.packReq),c=cust(r.cust),el=eligible(r);if(UI.packScanned.length!==el.length)return;
+  const w=parseFloat(UI.pack.w),chg=chargeable(UI.pack.box,w),n=el.length;
+  const fK=tariffKRW(chg,r.dest),eK=Math.max(0,n-S.cfg.free)*S.cfg.extra,cv=v=>c.cur==='CAD'?Math.round(v/S.cfg.fx*100)/100:v;
+  S.seq.box++;S.seq.inv++;const bid='BX'+S.seq.box,iid='INV'+S.seq.inv;
+  el.forEach(p=>p.packed=true);
+  S.boxes.push({id:bid,req:r.id,parcels:el.map(p=>p.code),type:UI.pack.box,weight:w,chg,at:now()});
+  const fr=cv(fK),ex=cv(eK);
+  S.invoices.push({id:iid,req:r.id,box:bid,cur:c.cur,freight:fr,extra:ex,total:Math.round((fr+ex)*100)/100,at:now(),paid:false});
+  log('포장',`${r.id} → 박스 ${bid} (${UI.pack.box}, ${w}kg, 청구 ${chg}kg), 소포 ${n}개`);
+  log('자동',`청구서 ${iid} ${money(fr+ex,c.cur)} 생성 · 고객 메일 발송`);
+  mail(c.email,`[COSHIP] 운임 청구 안내 ${iid}`,`${c.name}님, 합포장이 완료되어 운임이 확정되었습니다. 금액과 입금 방법은 고객 페이지에서 확인해 주세요. 입금 확인 후 출고됩니다.`);
+  if(r.partial){const rest=parcelsOf(r.id).filter(p=>!p.recv);if(rest.length){S.seq.req++;const nid='R'+S.seq.req;S.requests.push({id:nid,cust:r.cust,dest:r.dest,created:now(),bin:r.bin,partial:false});rest.forEach(p=>p.req=nid);log('자동',`남은 소포 ${rest.length}개 → 후속 신청 ${nid}로 이동`)}}
+  UI.packMsg={t:'ok',m:`포장 완료 · 박스 ${bid} · 청구서 ${iid}가 고객에게 자동 발송되었습니다. 박스는 결제대기 선반으로.`};
+  UI.packReq=null;UI.packScanned=[];UI.pack={box:'M',w:''};save();render();
+}
+function doShip(v){
+  v=v.trim().toUpperCase();if(!v)return;const b=S.boxes.find(x=>x.id===v);UI.shipBox=null;
+  if(!b){UI.shipMsg={t:'err',m:`등록되지 않은 박스 ${esc(v)}`}}
+  else if(b.shipped){UI.shipMsg={t:'err',m:`${b.id}는 ${fmtD(b.shippedAt)}에 이미 출고되었습니다.`}}
+  else{const i=invOf(b.req);
+    if(!i||!i.paid){UI.shipMsg={t:'err',m:`출고 차단 · ${b.id} 입금 미확인 (${i?i.id+' '+money(i.total,i.cur):'청구 없음'}). 결제대기 선반으로 돌려 놓으세요.`};log('차단',`미입금 박스 ${b.id} 출고 시도`)}
+    else{UI.shipBox=b.id;UI.shipMsg={t:'ok',m:`${b.id} 입금확인 완료 (${i.id}) · 운송사 송장을 스캔하세요.`}}}
+  render();
+}
+function shipDone(fd){
+  const b=S.boxes.find(x=>x.id===UI.shipBox);if(!b)return;const trk=fd.get('trk').trim();if(!trk)return;
+  if(!invOf(b.req)?.paid){UI.shipMsg={t:'err',m:'인계 직전 재확인: 입금 미확인으로 차단'};render();return}
+  b.shipped=true;b.carrier=fd.get('carrier');b.trk=trk;b.shippedAt=now();const r=req(b.req),c=cust(r.cust);
+  log('출고',`${b.id} → ${b.carrier} ${esc(trk)}`);
+  mail(c.email,`[COSHIP] 출고 완료 · 트래킹 안내`,`${c.name}님, 짐이 출고되었습니다. 운송사 ${b.carrier}, 송장번호 ${trk}. 고객 페이지에서 공식 조회 링크를 확인하세요.`);
+  UI.shipMsg={t:'ok',m:`출고 완료 · ${b.id} · 고객에게 트래킹 메일 자동 발송`};UI.shipBox=null;save();render();
+}
+function signup(fd){
+  const email=fd.get('email').trim().toLowerCase();
+  if(S.customers.some(c=>c.email.toLowerCase()===email)){UI.signupMsg={t:'err',m:'이미 등록된 이메일입니다. [내 페이지]에서 로그인하세요.'};render();return}
+  let id;do{id='CS-'+rid(5)}while(cust(id));
+  const c={id,name:fd.get('name').trim(),email,phone:fd.get('phone').trim(),cur:fd.get('cur'),dest:fd.get('dest'),addr:fd.get('addr').trim(),joined:now()};
+  S.customers.push(c);log('회원',`${esc(c.name)} 등록 → 고객번호 ${c.id}`);
+  mail(c.email,'[COSHIP] 고객번호 발급 안내',`${c.name}님의 고객번호는 ${c.id} 입니다. 한국 쇼핑몰 주문 시 받는 주소는 경기도 고양시 일산동구 고봉로678번길 146 (코쉽 한국지사), 수취인명은 "${c.name} ${c.id}"로 적어 주세요. 주문 후 고객 페이지에서 출고신청을 만들고 소포를 등록하세요.`);
+  UI.signupDone=c.id;UI.signupMsg=null;save();render();
+}
+function newReq(fd){
+  const c=cust(UI.portal.cid);S.seq.req++;
+  const r={id:'R'+S.seq.req,cust:c.id,dest:fd.get('dest'),rcpt:fd.get('rcpt').trim(),addr:fd.get('addr').trim(),created:now(),partial:false,rate:{free:S.cfg.free,extra:S.cfg.extra}};
+  S.requests.push(r);log('접수',`${c.id} 출고신청 ${r.id} 생성 (${r.dest}, 요율 동의 저장)`);UI.newReqOpen=false;save();render();toast(`${r.id} 생성 · 이제 소포를 등록하세요`);
+}
+const ACT={
+  tab:a=>{UI.tab=a.dataset.v;render();window.scrollTo(0,0)},
+  time:()=>{S.offsetDays++;
+    S.invoices.filter(i=>!i.paid).forEach(i=>{const d=days(i.at);if(d===2||d===S.cfg.unpaidDays){const c=cust(req(i.req).cust);mail(c.email,`[COSHIP] 입금 안내 (${d}일차) ${i.id}`,`${c.name}님, 운임 입금이 아직 확인되지 않았습니다. 고객 페이지에서 금액과 입금 방법을 확인해 주세요.`);log('자동',`${i.id} ${d}일차 독촉 메일`)}});
+    save();render();toast('하루가 지났습니다')},
+  reset:a=>{if(a.dataset.sure){S=seed();Object.assign(UI,{tab:'dash',inMsg:null,lastLabel:null,packReq:null,packScanned:[],packMsg:null,shipBox:null,shipMsg:null,finMsg:null,portal:{cid:'',code:null,tries:0,ok:false,msg:null},signupDone:null,newReqOpen:false});save();render();toast('데모 데이터가 초기화되었습니다')}
+    else{a.dataset.sure='1';a.textContent='한 번 더 누르면 초기화';setTimeout(()=>{a.dataset.sure='';a.textContent='데모 초기화'},3000)}},
+  rowAdd:()=>{UI.rows.push({mall:'',trk:'',desc:'',qty:1,val:''});render()},
+  rowDel:a=>{UI.rows.splice(+a.dataset.i,1);render()},
+  newSignup:()=>{UI.signupDone=null;render()},
+  goPortal:a=>{UI.tab='portal';UI.portal={cid:a.dataset.v,code:null,tries:0,ok:false,msg:null};render()},
+  toggleNewReq:()=>{UI.newReqOpen=!UI.newReqOpen;render()},
+  addParcel:a=>{const r=req(a.dataset.id),g=k=>(document.getElementById(`np-${r.id}-${k}`).value||'').trim();
+    const mall=g('mall'),trk=g('trk'),desc=g('desc'),qty=Number(g('qty'))||1,val=Number(g('val'))||0;
+    if(!mall||!desc){toast('쇼핑몰과 품목을 입력하세요');return}
+    if(r.dest==='US'&&!(val>0)){toast('미국행은 금액이 필요합니다 (관세 신고용)');return}
+    if(trk&&S.parcels.some(p=>p.trk===trk)){toast('이미 등록된 송장번호입니다');return}
+    S.seq.parcel++;const code='CP'+String(S.seq.parcel).padStart(4,'0');
+    S.parcels.push({code,req:r.id,mall,trk,desc,qty,val,recv:false});log('접수',`${r.id} 소포 등록 ${code} (${esc(mall)} ${esc(desc)})`);save();render();toast('소포가 등록되었습니다')},
+  sample:a=>{({inbound:doInbound,pack:doPack,ship:doShip})[a.dataset.f](a.dataset.v)},
+  photo:()=>toast('실서비스: 휴대폰 카메라로 촬영해 소포에 첨부'),
+  hold:a=>{const p=S.parcels.find(x=>x.code===a.dataset.id);p.hold=true;log('경고',`${p.code} 금지품목 의심 → 보류`);UI.inMsg={t:'warn',m:`${p.code} 보류 처리 · 포장 대상에서 제외되고 예외 대시보드로 이동했습니다.`};save();render()},
+  unhold:a=>{const p=S.parcels.find(x=>x.code===a.dataset.id);p.hold=false;log('관리',`${p.code} 보류 해제`);save();render()},
+  ukLink:a=>{const i=+a.dataset.i,u=S.unknown[i],sel=document.getElementById('uk-'+i);if(!sel||!sel.value)return;const r=req(sel.value);assignBin(r);
+    S.seq.parcel++;const code='CP'+String(S.seq.parcel).padStart(4,'0');S.parcels.push({code,req:r.id,mall:'(미확인 연결)',trk:u.trk,desc:'확인 필요',qty:1,val:0,recv:true,recvAt:now(),bin:r.bin});
+    S.unknown.splice(i,1);log('관리',`미확인 ${esc(u.trk)} → ${r.id} 연결, 라벨 ${code}`);if(status(r)==='ready'){r.readyAt=now();log('자동',`${r.id} 전량 입고 → 합포장 작업 생성`)}save();render()},
+  packStart:a=>{UI.tab='pack';UI.packReq=a.dataset.id;UI.packScanned=[];UI.packMsg=null;UI.pack={box:'M',w:''};render()},
+  packCancel:()=>{UI.packReq=null;UI.packScanned=[];UI.packMsg=null;render()},
+  scale:()=>{const r=req(UI.packReq);UI.pack.w=(0.6*eligible(r).length+Math.random()*2).toFixed(1);render();toast('저울 값을 읽었습니다 (데모)')},
+  packDone:packDone,
+  fakeTrk:()=>{const i=document.querySelector('[data-form="shipDone"] [name="trk"]');if(i)i.value='EE'+Math.floor(1e8+Math.random()*9e8)+'KR'},
+  fin:a=>{UI.fin=a.dataset.v;UI.finMsg=null;render()},
+  pay:a=>{const i=S.invoices.find(x=>x.id===a.dataset.id);const user=(document.getElementById('finUser')||{}).value||'재무';
+    if(i.paid){UI.finMsg={t:'warn',m:`${i.id}는 이미 ${fmtDT(i.paidAt)}에 확인되었습니다. 중복 처리하지 않았습니다 (출고·안내 1회만).`};render();return}
+    const el=document.getElementById('amt-'+i.id),v=parseFloat(el&&el.value);
+    if(!(v>=0)){UI.finMsg={t:'err',m:'실제 입금액을 입력하세요.'};render();return}
+    if(Math.abs(v-i.total)>0.009){UI.finMsg={t:'err',m:`승인 거부 · 금액 불일치 (청구 ${money(i.total,i.cur)} / 입금 ${money(v,i.cur)}). 고객 확인이 필요합니다.`};log('차단',`${i.id} 금액 불일치 ${money(v,i.cur)}`);save();render();return}
+    i.paid=true;i.paidAt=now();i.paidBy=user;i.paidAmt=v;log('입금',`${i.id} ${money(v,i.cur)} 확인 · ${esc(user)}`);
+    UI.finMsg={t:'ok',m:`${i.id} 입금확인 완료 · 박스가 출고 가능 목록으로 이동했습니다.`};save();render()},
+  fillCid:a=>{UI.portal.cid=a.dataset.v;render()},
+  logout:()=>{UI.portal={cid:'',code:null,tries:0,ok:false,msg:null};render()},
+  addTrk:a=>{const p=S.parcels.find(x=>x.code===a.dataset.id),v=(document.getElementById('trk-'+p.code).value||'').trim();if(!v)return;
+    if(S.parcels.some(x=>x.trk===v)){toast('이미 등록된 송장번호입니다');return}p.trk=v;log('접수',`${p.req} 고객이 송장 추가 ${esc(v)}`);save();render();toast('송장번호가 저장되었습니다')},
+  partial:a=>{const r=req(a.dataset.id);r.partial=true;r.readyAt=now();log('접수',`${r.id} 고객이 도착분 먼저 발송 요청`);save();render();toast('요청되었습니다. 도착한 소포부터 포장합니다.')}
+};
+document.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(!a)return;e.preventDefault();ACT[a.dataset.act]&&ACT[a.dataset.act](a)});
+document.addEventListener('submit',e=>{const f=e.target.closest('[data-form]');if(!f)return;e.preventDefault();const fd=new FormData(f),k=f.dataset.form;
+  if(k==='inbound')doInbound(fd.get('v'));
+  else if(k==='pack')doPack(fd.get('v'));
+  else if(k==='ship')doShip(fd.get('v'));
+  else if(k==='shipDone')shipDone(fd);
+  else if(k==='signup')signup(fd);
+  else if(k==='newReq')newReq(fd);
+  else if(k==='otpReq'){const cid=(fd.get('cid')||'').trim().toUpperCase();const c=cust(cid);UI.portal={cid,code:null,tries:0,ok:false,msg:null};
+    if(c){UI.portal.code=String(Math.floor(100000+Math.random()*900000));mail(c.email,'[COSHIP] 로그인 인증코드',`인증코드 ${UI.portal.code} (10분 유효). 본인이 요청하지 않았다면 무시하세요.`);save()}
+    else{UI.portal.code=null}
+    UI.portal.msg={t:'ok',m:'등록된 고객번호라면 이메일로 코드가 발송되었습니다.'};render()}
+  else if(k==='otpVerify'){const P=UI.portal;if(P.tries>=5){P.msg={t:'err',m:'시도 횟수 초과 · 새 코드를 요청하세요.'};render();return}
+    if(fd.get('code')===P.code){P.ok=true;P.msg=null;log('조회',`${P.cid} 고객 페이지 로그인`);save()}else{P.tries++;P.msg={t:'err',m:`코드가 틀렸습니다 (${P.tries}/5)`}}render()}
+});
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.dataset.row!==undefined){UI.rows[+t.dataset.row][t.dataset.f]=t.value;
+    if(t.dataset.f==='mall'){}const n=UI.rows.length,ex=Math.max(0,n-S.cfg.free)*S.cfg.extra;const fp=document.getElementById('feePrev');if(fp)fp.querySelector('b:nth-of-type(2)').textContent=money(ex,'KRW')}
+  if(t.id==='wIn'){UI.pack.w=t.value;render();const w=document.getElementById('wIn');if(w){w.focus();try{const L=w.value.length;w.type='text';w.setSelectionRange(L,L);w.type='number'}catch(e){}}}
+  if(t.dataset.cfg){const v=parseFloat(t.value);if(v>=0){S.cfg[t.dataset.cfg]=v;save()}}
+});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.id==='boxSel'){UI.pack.box=t.value;render()}
+});
+const h=(location.hash||'').slice(1);if(VIEWS[h])UI.tab=h;
+window.addEventListener('hashchange',()=>{const k=location.hash.slice(1);if(VIEWS[k]&&k!==UI.tab){UI.tab=k;render()}});
+render();
+</script>
+</body>
+</html>
