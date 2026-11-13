@@ -79,7 +79,7 @@ td{border-bottom:1px solid #f0f0f2;padding:7px 8px;vertical-align:middle}
 <header>
   <div class="top">
     <div class="logo"><b>COSHIP</b> 한국발 항공 합포장 시스템</div>
-    <span class="demo">1차 데모 · 실제 개인정보 입력 금지</span>
+    <span class="demo">1차 데모 · 이메일 실제 발송 없음 · 개인정보 입력 금지</span>
     <div class="clock"><span id="clk"></span>
       <button class="btn ghost sm" data-act="time" title="시간 경과 시뮬레이션">+1일 경과</button>
       <button class="btn ghost sm" data-act="reset">데모 초기화</button></div>
@@ -210,7 +210,7 @@ function stPill(r){const st=status(r);const cls={submitted:'',receiving:'p-blue'
 /* ===== 화면: ① 회원 등록 ===== */
 function vSignup(){
   if(UI.signupDone){const c=cust(UI.signupDone);
-    return `<h2>회원 등록 완료</h2><div class="card"><div class="msg ok">고객번호가 발급되었습니다. 안내 메일이 발송되었습니다.</div>
+    return `<h2>회원 등록 완료</h2><div class="card"><div class="msg ok">고객번호가 발급되었습니다. 안내 메일 내용은 [관리 → 발송 메일함]에서 확인하세요. (데모: 실제 이메일은 발송되지 않음)</div>
     <p>고객번호 <b class="mono" style="font-size:22px">${c.id}</b></p>
     <div class="note" style="color:var(--ink)"><b>한국 쇼핑몰 주문 방법</b><br>1. 받는 주소: <b>경기도 고양시 일산동구 고봉로678번길 146</b> (코쉽 한국지사)<br>2. 수취인명: <b>${esc(c.name)} ${c.id}</b> ← 반드시 고객번호를 붙여 주세요<br>3. 주문 후 [내 페이지]에서 출고신청을 만들고 주문한 소포를 등록하세요</div>
     <div class="row"><button class="btn red" data-act="goPortal" data-v="${c.id}">내 페이지로 (출고신청)</button><button class="btn ghost" data-act="newSignup">다른 고객 등록</button></div></div>`}
@@ -306,13 +306,25 @@ function vInbound(){
   <div class="grid g2"><div class="card">
    <form data-form="inbound" class="scan"><input name="v" id="scanIn" placeholder="국내 송장번호 스캔" autocomplete="off" autofocus><button class="btn">입고</button></form>
    ${msgBox(UI.inMsg)}
+   ${UI.pending?pendingPanel():''}
    <div class="hint">데모 스캔 (클릭 = 스캔)</div><div class="chips">
     ${expected.map(p=>`<span class="chip" data-act="sample" data-f="inbound" data-v="${p.trk}">${p.trk}</span>`).join('')}
     <span class="chip bad" data-act="sample" data-f="inbound" data-v="5512-3301-0001">5512-3301-0001 (중복)</span>
-    <span class="chip bad" data-act="sample" data-f="inbound" data-v="8800-1234-5678">8800-1234-5678 (미등록)</span></div>
+    <span class="chip bad" data-act="sample" data-f="inbound" data-v="7700-5555-1212">7700-5555-1212 (송장 미등록 · 수취인 김하나 CS-7K3QP)</span>
+    <span class="chip bad" data-act="sample" data-f="inbound" data-v="8800-1234-5678">8800-1234-5678 (고객번호도 없음)</span></div>
   </div><div>${label||'<div class="note">스캔하면 여기에 출력될 라벨이 표시됩니다.</div>'}</div></div>`;
 }
 
+function pendingPanel(){const P=UI.pending;const c=P.cid&&cust(P.cid);
+  const cands=c?S.parcels.filter(p=>!p.recv&&req(p.req).cust===c.id).sort((x,y)=>(x.trk?1:0)-(y.trk?1:0)):[];
+  return `<div class="card" style="border:2px solid var(--warn);margin:8px 0">
+   <b>열쇠 2 · 고객번호로 찾기</b> <span class="hint">송장 <span class="mono">${esc(P.trk)}</span></span>
+   <form data-form="pendCid" class="row" style="margin-top:8px"><input name="cid" value="${esc(P.cid)}" placeholder="수취인명의 고객번호 (예: CS-7K3QP)" class="mono"><button class="btn">찾기</button></form>
+   ${P.cid&&!c?'<p class="msg err">해당 고객번호가 없습니다.</p>':''}
+   ${c?`<p style="margin:10px 0 4px"><b>${esc(c.name)}</b> (${c.id}) 고객의 입고 대기 소포 · 박스의 보낸 곳(쇼핑몰)을 보고 선택하세요</p>
+     ${cands.map(p=>`<div class="row" style="padding:6px 0;border-bottom:1px solid #f0f0f2"><div><b>${esc(p.mall)}</b> · ${esc(p.desc)} <span class="hint">${p.req} · ${p.trk?'다른 송장 등록됨 '+esc(p.trk):'송장 미등록'}</span></div><button class="btn sm" data-act="matchTo" data-id="${p.code}">이 소포로 매칭</button></div>`).join('')||'<p class="hint">입고 대기 소포가 없습니다. 고객에게 소포 등록을 요청하세요.</p>'}`:''}
+   <div class="row" style="margin-top:10px"><span class="hint">고객번호도 없거나 찾을 수 없으면</span><button class="btn ghost sm" data-act="toUnknown">미확인 칸으로 보내기</button></div>
+  </div>`}
 /* ===== 화면: 합포장·실측 ===== */
 function vPack(){
   const open=S.requests.filter(r=>status(r)==='ready'&&!isHold(r)).sort((a,b)=>(a.readyAt||a.created)-(b.readyAt||b.created));
@@ -433,9 +445,19 @@ function doInbound(v){
       log('입고',`${p.code} (${esc(v)}) → ${r.id}, 칸 ${r.bin}`);
       if(status(r)==='ready'){r.readyAt=now();log('자동',`${r.id} 전량 입고 → 합포장 작업 자동 생성`);UI.inMsg.m+=' · <b>전량 입고 → 합포장 작업 생성</b>'}}
   }else if(S.unknown.some(u=>u.trk===v)){UI.inMsg={t:'err',m:`중복 · ${esc(v)} 는 이미 미확인 칸에 있습니다.`}}
-  else{S.seq.unk++;const bin='U-'+String(S.seq.unk).padStart(2,'0');S.unknown.push({trk:v,at:now(),bin,note:'사전 등록 없음'});UI.lastLabel=null;
-    UI.inMsg={t:'warn',m:`미등록 송장 · ${esc(v)} → 미확인 칸 ${bin}에 보관하고 예외 대시보드로 보냈습니다.`};log('경고',`미확인 입고 ${esc(v)} → ${bin}`)}
+  else{UI.pending={trk:v,cid:''};UI.lastLabel=null;UI.inMsg={t:'warn',m:`송장번호 미등록 · ${esc(v)}<br>택배 송장의 수취인명에서 <b>고객번호</b>를 찾아 아래에 입력하세요.`};render();return}
   save();render();
+}
+function receiveAs(p,trk,how){const r=req(p.req);assignBin(r);if(!p.trk)p.trk=trk;p.recv=true;p.recvAt=now();p.bin=r.bin;UI.lastLabel=p.code;
+  const ps=parcelsOf(r.id),n=ps.filter(x=>x.recv).length;
+  UI.inMsg={t:'ok',m:`매칭 완료 (${how}) · ${r.id} ${esc(cust(r.cust).name)} · ${n}/${ps.length} · 라벨 ${p.code} 출력 → 칸 ${r.bin}`};
+  log('입고',`${p.code} (${esc(trk)}) → ${r.id}, 칸 ${r.bin} · ${how}`);
+  if(status(r)==='ready'){r.readyAt=now();log('자동',`${r.id} 전량 입고 → 합포장 작업 자동 생성`);UI.inMsg.m+=' · <b>전량 입고 → 합포장 작업 생성</b>'}
+  UI.pending=null;save();render();}
+function toUnknown(v){
+  {S.seq.unk++;const bin='U-'+String(S.seq.unk).padStart(2,'0');S.unknown.push({trk:v,at:now(),bin,note:'사전 등록 없음'});UI.lastLabel=null;
+    UI.inMsg={t:'warn',m:`고객 확인 불가 · ${esc(v)} → 미확인 칸 ${bin}에 보관하고 예외 대시보드로 보냈습니다. (고객이 나중에 송장번호를 등록하면 자동 연결)`};log('경고',`미확인 입고 ${esc(v)} → ${bin}`)}
+  UI.pending=null;save();render();
 }
 function doPack(v){
   v=v.trim().toUpperCase();if(!v)return;const r=req(UI.packReq);const p=S.parcels.find(x=>x.code===v);const el=eligible(r);
@@ -498,7 +520,7 @@ const ACT={
   time:()=>{S.offsetDays++;
     S.invoices.filter(i=>!i.paid).forEach(i=>{const d=days(i.at);if(d===2||d===S.cfg.unpaidDays){const c=cust(req(i.req).cust);mail(c.email,`[COSHIP] 입금 안내 (${d}일차) ${i.id}`,`${c.name}님, 운임 입금이 아직 확인되지 않았습니다. 고객 페이지에서 금액과 입금 방법을 확인해 주세요.`);log('자동',`${i.id} ${d}일차 독촉 메일`)}});
     save();render();toast('하루가 지났습니다')},
-  reset:a=>{if(a.dataset.sure){S=seed();Object.assign(UI,{tab:'dash',inMsg:null,lastLabel:null,packReq:null,packScanned:[],packMsg:null,shipBox:null,shipMsg:null,finMsg:null,portal:{cid:'',code:null,tries:0,ok:false,msg:null},signupDone:null,newReqOpen:false});save();render();toast('데모 데이터가 초기화되었습니다')}
+  reset:a=>{if(a.dataset.sure){S=seed();Object.assign(UI,{tab:'dash',inMsg:null,lastLabel:null,packReq:null,packScanned:[],packMsg:null,shipBox:null,shipMsg:null,finMsg:null,portal:{cid:'',code:null,tries:0,ok:false,msg:null},signupDone:null,newReqOpen:false,pending:null});save();render();toast('데모 데이터가 초기화되었습니다')}
     else{a.dataset.sure='1';a.textContent='한 번 더 누르면 초기화';setTimeout(()=>{a.dataset.sure='';a.textContent='데모 초기화'},3000)}},
   rowAdd:()=>{UI.rows.push({mall:'',trk:'',desc:'',qty:1,val:''});render()},
   rowDel:a=>{UI.rows.splice(+a.dataset.i,1);render()},
@@ -513,6 +535,8 @@ const ACT={
     S.seq.parcel++;const code='CP'+String(S.seq.parcel).padStart(4,'0');
     S.parcels.push({code,req:r.id,mall,trk,desc,qty,val,recv:false});log('접수',`${r.id} 소포 등록 ${code} (${esc(mall)} ${esc(desc)})`);save();render();toast('소포가 등록되었습니다')},
   sample:a=>{({inbound:doInbound,pack:doPack,ship:doShip})[a.dataset.f](a.dataset.v)},
+  matchTo:a=>{const p=S.parcels.find(x=>x.code===a.dataset.id);receiveAs(p,UI.pending.trk,'고객번호 검색 → 직원 선택')},
+  toUnknown:()=>{toUnknown(UI.pending.trk)},
   photo:()=>toast('실서비스: 휴대폰 카메라로 촬영해 소포에 첨부'),
   hold:a=>{const p=S.parcels.find(x=>x.code===a.dataset.id);p.hold=true;log('경고',`${p.code} 금지품목 의심 → 보류`);UI.inMsg={t:'warn',m:`${p.code} 보류 처리 · 포장 대상에서 제외되고 예외 대시보드로 이동했습니다.`};save();render()},
   unhold:a=>{const p=S.parcels.find(x=>x.code===a.dataset.id);p.hold=false;log('관리',`${p.code} 보류 해제`);save();render()},
@@ -535,7 +559,12 @@ const ACT={
   fillCid:a=>{UI.portal.cid=a.dataset.v;render()},
   logout:()=>{UI.portal={cid:'',code:null,tries:0,ok:false,msg:null};render()},
   addTrk:a=>{const p=S.parcels.find(x=>x.code===a.dataset.id),v=(document.getElementById('trk-'+p.code).value||'').trim();if(!v)return;
-    if(S.parcels.some(x=>x.trk===v)){toast('이미 등록된 송장번호입니다');return}p.trk=v;log('접수',`${p.req} 고객이 송장 추가 ${esc(v)}`);save();render();toast('송장번호가 저장되었습니다')},
+    if(S.parcels.some(x=>x.trk===v)){toast('이미 등록된 송장번호입니다');return}p.trk=v;log('접수',`${p.req} 고객이 송장 추가 ${esc(v)}`);
+    const ui=S.unknown.findIndex(u=>u.trk===v);
+    if(ui>=0){const u=S.unknown[ui],r=req(p.req);assignBin(r);p.recv=true;p.recvAt=now();p.bin=r.bin;S.unknown.splice(ui,1);
+      log('자동',`미확인 칸 ${u.bin}의 ${esc(v)} → ${p.code} 자동 연결 (고객 송장 등록)`);if(status(r)==='ready'){r.readyAt=now();log('자동',`${r.id} 전량 입고 → 합포장 작업 생성`)}
+      save();render();toast('이미 창고에 도착해 있던 소포를 찾아 연결했습니다');return}
+    save();render();toast('송장번호가 저장되었습니다')},
   partial:a=>{const r=req(a.dataset.id);r.partial=true;r.readyAt=now();log('접수',`${r.id} 고객이 도착분 먼저 발송 요청`);save();render();toast('요청되었습니다. 도착한 소포부터 포장합니다.')}
 };
 document.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(!a)return;e.preventDefault();ACT[a.dataset.act]&&ACT[a.dataset.act](a)});
@@ -543,13 +572,14 @@ document.addEventListener('submit',e=>{const f=e.target.closest('[data-form]');i
   if(k==='inbound')doInbound(fd.get('v'));
   else if(k==='pack')doPack(fd.get('v'));
   else if(k==='ship')doShip(fd.get('v'));
+  else if(k==='pendCid'){UI.pending.cid=(fd.get('cid')||'').trim().toUpperCase();render()}
   else if(k==='shipDone')shipDone(fd);
   else if(k==='signup')signup(fd);
   else if(k==='newReq')newReq(fd);
   else if(k==='otpReq'){const cid=(fd.get('cid')||'').trim().toUpperCase();const c=cust(cid);UI.portal={cid,code:null,tries:0,ok:false,msg:null};
     if(c){UI.portal.code=String(Math.floor(100000+Math.random()*900000));mail(c.email,'[COSHIP] 로그인 인증코드',`인증코드 ${UI.portal.code} (10분 유효). 본인이 요청하지 않았다면 무시하세요.`);save()}
     else{UI.portal.code=null}
-    UI.portal.msg={t:'ok',m:'등록된 고객번호라면 이메일로 코드가 발송되었습니다.'};render()}
+    UI.portal.msg={t:'ok',m:'등록된 고객번호라면 이메일로 코드가 발송됩니다. (데모: 실제 발송 없음, [발송 메일함]에서 확인)'};render()}
   else if(k==='otpVerify'){const P=UI.portal;if(P.tries>=5){P.msg={t:'err',m:'시도 횟수 초과 · 새 코드를 요청하세요.'};render();return}
     if(fd.get('code')===P.code){P.ok=true;P.msg=null;log('조회',`${P.cid} 고객 페이지 로그인`);save()}else{P.tries++;P.msg={t:'err',m:`코드가 틀렸습니다 (${P.tries}/5)`}}render()}
 });
